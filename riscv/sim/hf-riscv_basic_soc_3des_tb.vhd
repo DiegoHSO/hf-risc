@@ -15,6 +15,8 @@ entity tb is
 end tb;
 
 architecture tb of tb is
+	key_t is array(0 to 3) of std_logic_vector(0 to 63);
+
 	signal clock_in, reset, data, stall, stall_sig: std_logic := '0';
 	signal uart_read, uart_write: std_logic;
 	signal boot_enable_n, ram_enable_n, ram_dly: std_logic;
@@ -30,8 +32,8 @@ architecture tb of tb is
 	
 	signal ext_periph, ext_periph_dly, ready: std_logic;
 	signal key: std_logic_vector(127 downto 0);
-	signal input, output: std_logic_vector(63 downto 0);
-	signal data_read_xtea, data_read_xtea_s: std_logic_vector(31 downto 0);
+	signal input, output: std_logic_vector(0 to 63);
+	signal data_read_3des, data_read_3des_s: std_logic_vector(31 downto 0);
 	signal control: std_logic_vector(1 downto 0);
 begin
 
@@ -78,7 +80,7 @@ begin
 
 	boot_enable_n <= '0' when (address(31 downto 28) = "0000" and stall_sig = '0') or reset = '1' else '1';
 	ram_enable_n <= '0' when (address(31 downto 28) = "0100" and stall_sig = '0') or reset = '1' else '1';
-	data_read <= data_read_xtea when ext_periph = '1' or ext_periph_dly = '1' else data_read_periph when periph = '1' or periph_dly = '1' else data_read_boot when address(31 downto 28) = "0000" and ram_dly = '0' else data_read_ram;
+	data_read <= data_read_3des when ext_periph = '1' or ext_periph_dly = '1' else data_read_periph when periph = '1' or periph_dly = '1' else data_read_boot when address(31 downto 28) = "0000" and ram_dly = '0' else data_read_ram;
 	data_w_n_ram <= not data_we;
 
 	process(clock_in, reset)
@@ -131,36 +133,36 @@ begin
 		gpiob_ddr => gpiob_ddr
 	);
 	
-	data_read_xtea <= data_read_xtea_s(7 downto 0) & data_read_xtea_s(15 downto 8) & data_read_xtea_s(23 downto 16) & data_read_xtea_s(31 downto 24);
+	data_read_3des <= data_read_3des_s(7 downto 0) & data_read_3des_s(15 downto 8) & data_read_3des_s(23 downto 16) & data_read_3des_s(31 downto 24);
 	ext_periph <= '1' when address(31 downto 24) = x"e7" else '0';
 	
 	process (clock_in, reset, address, key, input, output)
 	begin
 		if reset = '1' then
-			data_read_xtea_s <= (others => '0');
+			data_read_3des_s <= (others => '0');
 		elsif clock_in'event and clock_in = '1' then
-			if (ext_periph = '1') then	-- XTEA is at 0xe7000000
+			if (ext_periph = '1') then	-- 3DES is at 0xe7000000
 				case address(7 downto 4) is
 					when "0000" =>		-- control	0xe7000000	(bit2 - ready (R), bit1 - encrypt (RW), bit0 - start (RW)
-						data_read_xtea_s <= x"000000" & "00000" & ready & control;
+						data_read_3des_s <= x"000000" & "00000" & control;
 					when "0001" =>		-- key[0]	0xe7000010
-						data_read_xtea_s <= key(127 downto 96);
+						data_read_3des_s <= key(127 downto 96);
 					when "0010" =>		-- key[1]	0xe7000020
-						data_read_xtea_s <= key(95 downto 64);
+						data_read_3des_s <= key(95 downto 64);
 					when "0011" =>		-- key[2]	0xe7000030
-						data_read_xtea_s <= key(63 downto 32);
+						data_read_3des_s <= key(63 downto 32);
 					when "0100" =>		-- key[3]	0xfa000040
-						data_read_xtea_s <= key(31 downto 0);
+						data_read_3des_s <= key(31 downto 0);
 					when "0101" =>		-- input[0]	0xe7000050
-						data_read_xtea_s <= input(63 downto 32);
+						data_read_3des_s <= input(63 downto 32);
 					when "0110" =>		-- input[1]	0xe7000060
-						data_read_xtea_s <= input(31 downto 0);
+						data_read_3des_s <= input(31 downto 0);
 					when "0111" =>		-- output[0]	0xe7000070
-						data_read_xtea_s <= output(63 downto 32);
+						data_read_3des_s <= output(63 downto 32);
 					when "1000" =>		-- output[1]	0xe7000080
-						data_read_xtea_s <= output(31 downto 0);
+						data_read_3des_s <= output(31 downto 0);
 					when others =>
-						data_read_xtea_s <= (others => '0');
+						data_read_3des_s <= (others => '0');
 				end case;
 			end if;
 		end if;
@@ -173,38 +175,45 @@ begin
 			input <= (others => '0');
 			control <= "00";
 		elsif clock_in'event and clock_in = '1' then
-			if (ext_periph = '1' and data_we /= "0000") then	-- XTEA is at 0xe7000000
+			if (ext_periph = '1' and data_we /= "0000") then	-- 3DES is at 0xe7000000
 				case address(7 downto 4) is
-					when "0000" =>		-- control	0xe7000000	(bit2 - ready (R), bit1 - encrypt (RW), bit0 - start (RW)
-						control <= data_write_periph(1 downto 0);
-					when "0001" =>		-- key[0]	0xe7000010
-						key(127 downto 96) <= data_write_periph;
-					when "0010" =>		-- key[1]	0xe7000020
-						key(95 downto 64) <= data_write_periph;
-					when "0011" =>		-- key[2]	0xe7000030
-						key(63 downto 32) <= data_write_periph;
-					when "0100" =>		-- key[3]	0xe7000040
-						key(31 downto 0) <= data_write_periph;
-					when "0101" =>		-- input[0]	0xe7000050
-						input(63 downto 32) <= data_write_periph;
-					when "0110" =>		-- input[1]	0xe7000060
-						input(31 downto 0) <= data_write_periph;
+					when "0000" =>		-- key[0]	0xe7000000
+						key(0)(0 to 31) <= data_write_periph;
+					when "0001" =>		-- key[1]	0xe7000010
+						key(0)(32 to 63) <= data_write_periph;
+					when "0010" =>		-- key[2]	0xe7000020
+						key(1)(0 to 31) <= data_write_periph;
+					when "0011" =>		-- key[3]	0xe7000030
+						key(1)(32 to 63) <= data_write_periph;
+					when "0100" =>		-- key[4]	0xe7000040
+						key(2)(0 to 31) <= data_write_periph;
+					when "0101" =>		-- key[5]	0xe7000050
+						key(2)(32 to 63) <= data_write_periph;
+					when "0110" => 		-- input[0]	0xe7000060
+						input(0 to 31) <= data_write_periph;
+					when "0111" => 		-- input[1]	0xe7000070
+						input(32 to 63) <= data_write_periph;
+					when "1000" =>		-- control	0xe7000080	(bit2 - key ready (R), bit1 - data ready, bit0 - encrypt (RW)
+						control <= data_write_periph(2 downto 0);
 					when others =>
 				end case;
 			end if;
 		end if;
 	end process;
 	
-	-- XTEA core
-	crypto_core: entity work.xtea
+	-- 3DES core
+	crypto_core: entity work.tdes_top
 	port map(	clock => clock_in,
 			reset => reset,
-			start => control(0),
-			encrypt => control(1),
-			key => key,
-			input => input,
-			output => output,
-			ready => ready
+			lddata => control(0), -- mexer
+			ldkey => control(0), -- mexer
+			function_select => control(1), -- mexer
+			key1_in => key(0),
+			key2_in => key(1),
+			key3_in => key(2),
+			data_in => input,
+			data_out => output,
+			out_ready => ready
 	);
 
 	-- boot ROM
