@@ -303,6 +303,10 @@ test_spi: crt
 	$(GCC_$(ARCH)) -o test_spi.o app/test_spi.c
 	@$(MAKE) --no-print-directory link
 
+3des_hw: crt
+	$(GCC_$(ARCH)) -o 3des_hw.o app/3des_hw.c
+	@$(MAKE) --no-print-directory link
+
 xtea: crt
 	$(GCC_$(ARCH)) -o xtea.o app/xtea.c
 	@$(MAKE) --no-print-directory link
