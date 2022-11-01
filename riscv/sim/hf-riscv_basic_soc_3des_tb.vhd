@@ -34,7 +34,7 @@ architecture tb of tb is
 	signal key: std_logic_vector(127 downto 0);
 	signal input, output: std_logic_vector(0 to 63);
 	signal data_read_3des, data_read_3des_s: std_logic_vector(31 downto 0);
-	signal control: std_logic_vector(1 downto 0);
+	signal control: std_logic_vector(3 downto 0);
 begin
 
 	process						--25Mhz system clock
@@ -143,24 +143,28 @@ begin
 		elsif clock_in'event and clock_in = '1' then
 			if (ext_periph = '1') then	-- 3DES is at 0xe7000000
 				case address(7 downto 4) is
-					when "0000" =>		-- control	0xe7000000	(bit2 - ready (R), bit1 - encrypt (RW), bit0 - start (RW)
-						data_read_3des_s <= x"000000" & "00000" & control;
-					when "0001" =>		-- key[0]	0xe7000010
-						data_read_3des_s <= key(127 downto 96);
-					when "0010" =>		-- key[1]	0xe7000020
-						data_read_3des_s <= key(95 downto 64);
-					when "0011" =>		-- key[2]	0xe7000030
-						data_read_3des_s <= key(63 downto 32);
-					when "0100" =>		-- key[3]	0xfa000040
-						data_read_3des_s <= key(31 downto 0);
-					when "0101" =>		-- input[0]	0xe7000050
-						data_read_3des_s <= input(63 downto 32);
-					when "0110" =>		-- input[1]	0xe7000060
-						data_read_3des_s <= input(31 downto 0);
-					when "0111" =>		-- output[0]	0xe7000070
-						data_read_3des_s <= output(63 downto 32);
-					when "1000" =>		-- output[1]	0xe7000080
-						data_read_3des_s <= output(31 downto 0);
+					when "0000" =>		-- key[0]	0xe7000000
+						data_read_3des_s <= key(0)(0 to 31);
+					when "0001" =>		-- key[1]	0xe7000010
+						data_read_3des_s <= key(0)(32 to 63);
+					when "0010" =>		-- key[2]	0xe7000020
+						data_read_3des_s <= key(1)(0 to 31);
+					when "0011" =>		-- key[3]	0xe7000030
+						data_read_3des_s <= key(1)(32 to 63);
+					when "0100" =>		-- key[4]	0xe7000040
+						data_read_3des_s <= key(2)(0 to 31);
+					when "0101" =>		-- key[5]	0xe7000050
+						data_read_3des_s <= key(2)(31 to 63);
+					when "0110" =>		-- input[0]	0xe7000060
+						data_read_3des_s <= input(0 to 31);
+					when "0111" =>		-- input[1]	0xe7000070
+						data_read_3des_s <= input(32 to 63);
+					when "1000" =>		-- control	0xe7000080	(bit4 - ready, bit3 - key ready (R), bit2 - data ready, bit1 - encrypt (RW), bit0 - start)
+						data_read_3des_s <= x"000000" & "0000" & ready & control;
+					when "1001" =>		-- output[0] 0xe7000090
+						data_read_3des_s <= output(0 to 31);
+					when "1010" => 		-- output[1] 0xe70000a0
+						data_read_3des_s <= output(32 to 63);
 					when others =>
 						data_read_3des_s <= (others => '0');
 				end case;
@@ -193,8 +197,8 @@ begin
 						input(0 to 31) <= data_write_periph;
 					when "0111" => 		-- input[1]	0xe7000070
 						input(32 to 63) <= data_write_periph;
-					when "1000" =>		-- control	0xe7000080	(bit2 - key ready (R), bit1 - data ready, bit0 - encrypt (RW)
-						control <= data_write_periph(2 downto 0);
+					when "1000" =>		-- control	0xe7000080	(bit3 - key ready (R), bit2 - data ready, bit1 - encrypt (RW), bit0 - start)
+						control <= data_write_periph(3 downto 0);
 					when others =>
 				end case;
 			end if;
@@ -204,10 +208,10 @@ begin
 	-- 3DES core
 	crypto_core: entity work.tdes_top
 	port map(	clock => clock_in,
-			reset => reset,
-			lddata => control(0), -- mexer
-			ldkey => control(0), -- mexer
-			function_select => control(1), -- mexer
+			ldkey => control(3),
+			lddata => control(2),
+			function_select => control(1),
+			reset => control(0),
 			key1_in => key(0),
 			key2_in => key(1),
 			key3_in => key(2),
