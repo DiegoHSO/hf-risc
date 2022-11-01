@@ -5,45 +5,45 @@
 
 vlib work
   
-vcom hf-risc/sim/rv32e_basicrec_fsm.vhd
-vcom hf-risc/sim/riscv/core_rv32e/bshifter.vhd 
-vcom hf-risc/sim/riscv/core_rv32e/alu.vhd 
-vcom hf-risc/sim/riscv/core_rv32e/reg_bank.vhd 
-vcom hf-risc/sim/riscv/core_rv32e/control.vhd 
-vcom hf-risc/sim/riscv/core_rv32e/datapath.vhd 
-vcom hf-risc/sim/riscv/core_rv32e/int_control.vhd 
-vcom hf-risc/sim/riscv/core_rv32e/cpu.vhd 
-vcom hf-risc/sim/devices/controllers/uart/uart.vhd 
-vcom hf-risc/sim/devices/controllers/xtea/xtea.vhd 
-vcom hf-risc/sim/devices/peripherals/basic_soc.vhd 
-vcom hf-risc/sim/riscv/sim/boot_ram.vhd 
-vcom hf-risc/sim/riscv/sim/ram.vhd 
-vcom hf-risc/sim/riscv/sim/hf-riscv_basic_soc_xtea_tb.vhd
-vcom hf-risc/sim/devices/controllers/3des/tdes_top.vhd 
-vcom hf-risc/sim/devices/controllers/3des/add_key.vhd 
-vcom hf-risc/sim/devices/controllers/3des/add_left.vhd 
-vcom hf-risc/sim/devices/controllers/3des/block_top.vhd 
-vcom hf-risc/sim/devices/controllers/3des/des_cipher_top.vhd 
-vcom hf-risc/sim/devices/controllers/3des/des_top.vhd 
-vcom hf-risc/sim/devices/controllers/3des/e_expansion_function.vhd 
-vcom hf-risc/sim/devices/controllers/3des/key_schedule.vhd 
-vcom hf-risc/sim/devices/controllers/3des/p_box.vhd 
-vcom hf-risc/sim/devices/controllers/3des/s_box.vhd 
-vcom hf-risc/sim/devices/controllers/3des/s1_box.vhd 
-vcom hf-risc/sim/devices/controllers/3des/s2_box.vhd 
-vcom hf-risc/sim/devices/controllers/3des/s3_box.vhd 
-vcom hf-risc/sim/devices/controllers/3des/s4_box.vhd 
-vcom hf-risc/sim/devices/controllers/3des/s5_box.vhd 
-vcom hf-risc/sim/devices/controllers/3des/s6_box.vhd 
-vcom hf-risc/sim/devices/controllers/3des/s7_box.vhd 
-vcom hf-risc/sim/devices/controllers/3des/s8_box.vhd 
-vcom hf-risc/sim/riscv/sim/hf-riscv_basic_soc_3des_tb.vhd
+# vcom hf-risc/sim/rv32e_basic/rec_fsm.vhd
+vcom ../../riscv/core_rv32e/bshifter.vhd 
+vcom ../../riscv/core_rv32e/alu.vhd 
+vcom ../../riscv/core_rv32e/reg_bank.vhd 
+vcom ../../riscv/core_rv32e/control.vhd 
+vcom ../../riscv/core_rv32e/datapath.vhd 
+vcom ../../riscv/core_rv32e/int_control.vhd 
+vcom ../../riscv/core_rv32e/cpu.vhd 
+vcom ../../devices/controllers/uart/uart.vhd 
+vcom ../../devices/controllers/xtea/xtea.vhd 
+vcom ../../devices/peripherals/basic_soc.vhd 
+vcom ../../riscv/sim/boot_ram.vhd 
+vcom ../../riscv/sim/ram.vhd 
+vcom ../../devices/controllers/3des/tdes_top.vhd 
+vcom ../../devices/controllers/3des/add_key.vhd 
+vcom ../../devices/controllers/3des/add_left.vhd 
+vcom ../../devices/controllers/3des/block_top.vhd 
+vcom ../../devices/controllers/3des/des_cipher_top.vhd 
+vcom ../../devices/controllers/3des/des_top.vhd 
+vcom ../../devices/controllers/3des/e_expansion_function.vhd 
+vcom ../../devices/controllers/3des/key_schedule.vhd 
+vcom ../../devices/controllers/3des/p_box.vhd 
+vcom ../../devices/controllers/3des/s_box.vhd 
+vcom ../../devices/controllers/3des/s1_box.vhd 
+vcom ../../devices/controllers/3des/s2_box.vhd 
+vcom ../../devices/controllers/3des/s3_box.vhd 
+vcom ../../devices/controllers/3des/s4_box.vhd 
+vcom ../../devices/controllers/3des/s5_box.vhd 
+vcom ../../devices/controllers/3des/s6_box.vhd 
+vcom ../../devices/controllers/3des/s7_box.vhd 
+vcom ../../devices/controllers/3des/s8_box.vhd 
+vcom ../../riscv/sim/hf-riscv_basic_soc_3des_tb.vhd
 
-vsim -voptargs="+acc" hf-riscv_basic_soc_3des_tb
+vsim -voptargs="+acc" tb
 
 set StdArithNoWarnings 1
 set StdVitalGlitchNoWarnings 1
 
-do wave.do
+add wave sim:/*
+# do wave.do
 
 run 9000 ns

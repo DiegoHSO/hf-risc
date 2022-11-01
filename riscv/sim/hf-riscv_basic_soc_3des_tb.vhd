@@ -15,7 +15,7 @@ entity tb is
 end tb;
 
 architecture tb of tb is
-	key_t is array(0 to 3) of std_logic_vector(0 to 63);
+	type key_t is array(0 to 3) of std_logic_vector(0 to 63);
 
 	signal clock_in, reset, data, stall, stall_sig: std_logic := '0';
 	signal uart_read, uart_write: std_logic;
@@ -31,7 +31,7 @@ architecture tb of tb is
 	signal gpio_sig, gpio_sig2, gpio_sig3: std_logic := '0';
 	
 	signal ext_periph, ext_periph_dly, ready: std_logic;
-	signal key: std_logic_vector(127 downto 0);
+	signal key: key_t;
 	signal input, output: std_logic_vector(0 to 63);
 	signal data_read_3des, data_read_3des_s: std_logic_vector(31 downto 0);
 	signal control: std_logic_vector(3 downto 0);
@@ -154,13 +154,13 @@ begin
 					when "0100" =>		-- key[4]	0xe7000040
 						data_read_3des_s <= key(2)(0 to 31);
 					when "0101" =>		-- key[5]	0xe7000050
-						data_read_3des_s <= key(2)(31 to 63);
+						data_read_3des_s <= key(2)(32 to 63);
 					when "0110" =>		-- input[0]	0xe7000060
 						data_read_3des_s <= input(0 to 31);
 					when "0111" =>		-- input[1]	0xe7000070
 						data_read_3des_s <= input(32 to 63);
 					when "1000" =>		-- control	0xe7000080	(bit4 - ready, bit3 - key ready (R), bit2 - data ready, bit1 - encrypt (RW), bit0 - start)
-						data_read_3des_s <= x"000000" & "0000" & ready & control;
+						data_read_3des_s <= x"000000" & "000" & ready & control;
 					when "1001" =>		-- output[0] 0xe7000090
 						data_read_3des_s <= output(0 to 31);
 					when "1010" => 		-- output[1] 0xe70000a0
@@ -175,9 +175,9 @@ begin
 	process (clock_in, reset, address, control, key, input, output)
 	begin
 		if reset = '1' then
-			key <= (others => '0');
+			key <= (others => (others => '0'));
 			input <= (others => '0');
-			control <= "00";
+			control <= x"0";
 		elsif clock_in'event and clock_in = '1' then
 			if (ext_periph = '1' and data_we /= "0000") then	-- 3DES is at 0xe7000000
 				case address(7 downto 4) is
