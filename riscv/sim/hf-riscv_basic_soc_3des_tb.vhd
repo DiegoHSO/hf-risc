@@ -34,7 +34,7 @@ architecture tb of tb is
 	signal key: key_t;
 	signal input, output: std_logic_vector(0 to 63);
 	signal data_read_3des, data_read_3des_s: std_logic_vector(31 downto 0);
-	signal control: std_logic_vector(3 downto 0);
+	signal control: std_logic_vector(2 downto 0);
 begin
 
 	process						--25Mhz system clock
@@ -159,8 +159,8 @@ begin
 						data_read_3des_s <= input(0 to 31);
 					when "0111" =>		-- input[1]	0xe7000070
 						data_read_3des_s <= input(32 to 63);
-					when "1000" =>		-- control	0xe7000080	(bit4 - ready, bit3 - key ready (R), bit2 - data ready, bit1 - encrypt (RW), bit0 - start)
-						data_read_3des_s <= x"000000" & "000" & ready & control;
+					when "1000" =>		-- control	0xe7000080	(bit3 - ready, bit2 - key ready (R), bit1 - data ready, bit0 - encrypt (RW))
+						data_read_3des_s <= x"000000" & "0000" & ready & control;
 					when "1001" =>		-- output[0] 0xe7000090
 						data_read_3des_s <= output(0 to 31);
 					when "1010" => 		-- output[1] 0xe70000a0
@@ -177,7 +177,7 @@ begin
 		if reset = '1' then
 			key <= (others => (others => '0'));
 			input <= (others => '0');
-			control <= x"0";
+			control <= "000";
 		elsif clock_in'event and clock_in = '1' then
 			if (ext_periph = '1' and data_we /= "0000") then	-- 3DES is at 0xe7000000
 				case address(7 downto 4) is
@@ -197,8 +197,8 @@ begin
 						input(0 to 31) <= data_write_periph;
 					when "0111" => 		-- input[1]	0xe7000070
 						input(32 to 63) <= data_write_periph;
-					when "1000" =>		-- control	0xe7000080	(bit3 - key ready (R), bit2 - data ready, bit1 - encrypt (RW), bit0 - start)
-						control <= data_write_periph(3 downto 0);
+					when "1000" =>		-- control	0xe7000080	(bit3 - ready, bit2 - key ready (R), bit1 - data ready, bit0 - encrypt (RW))
+						control <= data_write_periph(2 downto 0);
 					when others =>
 				end case;
 			end if;
@@ -208,10 +208,10 @@ begin
 	-- 3DES core
 	crypto_core: entity work.tdes_top
 	port map(	clock => clock_in,
-			ldkey => control(3),
-			lddata => control(2),
-			function_select => control(1),
-			reset => control(0),
+			reset => reset,
+			ldkey => control(2),
+			lddata => control(1),
+			function_select => control(0),
 			key1_in => key(0),
 			key2_in => key(1),
 			key3_in => key(2),

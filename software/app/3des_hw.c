@@ -13,12 +13,11 @@
 #define _3DES_OUT0			(*(volatile uint32_t *)(_3DES_BASE + 0x090))
 #define _3DES_OUT1			(*(volatile uint32_t *)(_3DES_BASE + 0x0a0))
 
-#define _3DES_START			(1 << 0)
-#define _3DES_ENCRYPT		(1 << 1)
-#define _3DES_DECRYPT		(0 << 1)
-#define _3DES_DATA_READY	(1 << 2)
-#define _3DES_KEY_READY		(1 << 3)
-#define _3DES_READY			(1 << 4)
+#define _3DES_ENCRYPT		(1 << 0)
+#define _3DES_DECRYPT		(0 << 0)
+#define _3DES_DATA_READY	(1 << 1)
+#define _3DES_KEY_READY		(1 << 2)
+#define _3DES_READY			(1 << 3)
 
 /*
 3DES encryption algorithm
@@ -71,6 +70,8 @@ int main(void){
 
 	printf("message: %8x%8x\n", msg[0], msg[1]);
 
+	_3DES_CONTROL = _3DES_ENCRYPT;
+
 	_3DES_KEY0 = _3des_key[0];
 	_3DES_KEY1 = _3des_key[1];
 	_3DES_KEY2 = _3des_key[2];
@@ -79,36 +80,30 @@ int main(void){
 	_3DES_KEY5 = _3des_key[5];
 	_3DES_CONTROL |= _3DES_KEY_READY;
 
-	_3DES_CONTROL = _3DES_ENCRYPT;
-
 	cycles = TIMER0;
 	_3DES_IN0 = msg[0];
 	_3DES_IN1 = msg[1];
 	_3DES_CONTROL |= _3DES_DATA_READY;
 
-	_3DES_CONTROL |= _3DES_START; // ligou
 	while (!(_3DES_CONTROL & _3DES_READY)); // esperando
 
-	_3DES_CONTROL &= ~_3DES_START; // desligou
 	_3DES_CONTROL &= ~_3DES_DATA_READY; // desligou
 
 	cycles = TIMER0 - cycles;
 
+	_3DES_CONTROL = _3DES_DECRYPT;
+	
 	msg[0] = _3DES_OUT0;
 	msg[1] = _3DES_OUT1;
 	_3DES_CONTROL |= _3DES_DATA_READY;
 
 	printf("encipher: %8x%8x, %d cycles\n", msg[0], msg[1], cycles);
 
-	_3DES_CONTROL = _3DES_DECRYPT;
-
 	cycles = TIMER0;
 	_3DES_IN0 = msg[0];
 	_3DES_IN1 = msg[1];
-	_3DES_CONTROL |= _3DES_START;
 	while (!(_3DES_CONTROL & _3DES_READY));
 
-	_3DES_CONTROL &= ~_3DES_START;
 	_3DES_CONTROL &= ~_3DES_KEY_READY;
 	_3DES_CONTROL &= ~_3DES_DATA_READY; // desligou
 
