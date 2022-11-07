@@ -5,7 +5,6 @@
 
 vlib work
   
-# vcom hf-risc/sim/rv32e_basic/rec_fsm.vhd
 vcom ../../riscv/core_rv32e/bshifter.vhd 
 vcom ../../riscv/core_rv32e/alu.vhd 
 vcom ../../riscv/core_rv32e/reg_bank.vhd 
@@ -13,8 +12,7 @@ vcom ../../riscv/core_rv32e/control.vhd
 vcom ../../riscv/core_rv32e/datapath.vhd 
 vcom ../../riscv/core_rv32e/int_control.vhd 
 vcom ../../riscv/core_rv32e/cpu.vhd 
-vcom ../../devices/controllers/uart/uart.vhd 
-vcom ../../devices/controllers/xtea/xtea.vhd 
+vcom ../../devices/controllers/uart/uart.vhd
 vcom ../../devices/peripherals/basic_soc.vhd 
 vcom ../../riscv/sim/boot_ram.vhd 
 vcom ../../riscv/sim/ram.vhd 
@@ -46,4 +44,4 @@ set StdVitalGlitchNoWarnings 1
 add wave sim:/*
 # do wave.do
 
-run 9000 ns
+run 10 ms
