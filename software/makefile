@@ -305,6 +305,7 @@ test_spi: crt
 
 3des_hw: crt
 	$(GCC_$(ARCH)) -o 3des_hw.o app/3des_hw.c
+	# $(GCC_$(ARCH)) -o DES.o app/DES.c
 	@$(MAKE) --no-print-directory link
 
 xtea: crt

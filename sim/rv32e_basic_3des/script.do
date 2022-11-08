@@ -44,4 +44,4 @@ set StdVitalGlitchNoWarnings 1
 add wave sim:/*
 # do wave.do
 
-run 10 ms
+run 15 ms
