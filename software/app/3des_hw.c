@@ -21,58 +21,30 @@
 #define _3DES_RESET			(1 << 3)
 #define _3DES_READY			(1 << 4)
 
-/*
-3DES encryption algorithm
+// 3DES encryption algorithm
 
-based on reference code released into the public domain by David Wheeler and Roger Needham
-the code takes 64 bits of data in v[0] and v[1] and 128 bits of key in key[0] - key[3]
-
-recommended number of rounds is 32 (2 Feistel-network rounds are performed on each iteration).
-*/
-
-const uint32_t _3des_key[6] = {0xf0e1d2c3, 0xb4a59687, 0x78695a4b, 0x3c2d1e0f, 0xb4a59687, 0xf0e1d2c3};
-uint32_t msg[2] = {0x12345678, 0x90123456};
-uint32_t *cipher;
-
-void set_key() {
-	_3DES_KEY0 = _3des_key[0];
-	_3DES_KEY1 = _3des_key[1];
-	_3DES_KEY2 = _3des_key[2];
-	_3DES_KEY3 = _3des_key[3];
-	_3DES_KEY4 = _3des_key[4];
-	_3DES_KEY5 = _3des_key[5];
+void set_key(const uint32_t key[6]) {
+	_3DES_KEY0 = key[0];
+	_3DES_KEY1 = key[1];
+	_3DES_KEY2 = key[2];
+	_3DES_KEY3 = key[3];
+	_3DES_KEY4 = key[4];
+	_3DES_KEY5 = key[5];
 	_3DES_CONTROL |= _3DES_KEY_READY;
 	_3DES_CONTROL &= ~_3DES_KEY_READY;
 }
 
+void encrypt(uint32_t v[2]) {
 
-uint32_t* encrypt() {
-
-	_3DES_IN0 = msg[0];
-	_3DES_IN1 = msg[1];
-	_3DES_CONTROL |= _3DES_DATA_READY;
-
-	while (!(_3DES_CONTROL & _3DES_READY)); // esperando
-	_3DES_CONTROL &= ~_3DES_DATA_READY; // desligou
-
-	static uint32_t cipher[2];
-	cipher[0] = _3DES_OUT0;
-	cipher[1] = _3DES_OUT1;
-
-	return cipher;
-}
-
-void decrypt(uint32_t* cipher) {
-
-	_3DES_IN0 = cipher[0];
-	_3DES_IN1 = cipher[1];
+	_3DES_IN0 = v[0];
+	_3DES_IN1 = v[1];
 	_3DES_CONTROL |= _3DES_DATA_READY;
 
 	while (!(_3DES_CONTROL & _3DES_READY));
-	_3DES_CONTROL &= ~_3DES_DATA_READY; // desligou
-	
-	msg[0] = _3DES_OUT0;
-	msg[1] = _3DES_OUT1;
+	_3DES_CONTROL &= ~_3DES_DATA_READY;
+
+	v[0] = _3DES_OUT0;
+	v[1] = _3DES_OUT1;
 }
 
 void init_3des(int mode){
@@ -83,6 +55,8 @@ void init_3des(int mode){
 
 int main(void){
 	uint32_t cycles;
+	uint32_t _3des_key[6] = {0xf0e1d2c3, 0xb4a59687, 0x78695a4b, 0x3c2d1e0f, 0xb4a59687, 0xf0e1d2c3};
+	uint32_t msg[2] = {0x12345678, 0x90123456};
 
 	/* devemos manter?
 	des_ctx dc; // Key schedule structure
@@ -108,18 +82,18 @@ int main(void){
 	printf("message: %8x%8x\n", msg[0], msg[1]);
 	
 	init_3des(_3DES_ENCRYPT);
-	set_key();
+	set_key(_3des_key);
 	
 	cycles = TIMER0;
-	cipher = encrypt();
+	encrypt(msg);
 	cycles = TIMER0 - cycles;
-	printf("encipher: %8x%8x, %d cycles\n", cipher[0], cipher[1], cycles);
+	printf("encipher: %8x%8x, %d cycles\n", msg[0], msg[1], cycles);
 
 	init_3des(_3DES_DECRYPT);
-	set_key();
+	set_key(_3des_key);
 	
 	cycles = TIMER0;
-	decrypt(cipher);
+	encrypt(msg);
 	cycles = TIMER0 - cycles;
 	printf("decipher: %8x%8x, %d cycles\n", msg[0], msg[1], cycles);
 
