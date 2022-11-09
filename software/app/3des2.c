@@ -1,4 +1,5 @@
 #include <hf-risc.h>
+#include <math.h>
 
 #define _3DES_BASE			0xe7000000
 #define _3DES_KEY0			(*(volatile uint32_t *)(_3DES_BASE + 0x000))
@@ -161,10 +162,29 @@ int main(void){
 	uint8_t message[] = "the quick brown fox jumps over the lazy dog";
 	uint32_t _3des_key[6] = {0xf0e1d2c3, 0xb4a59687, 0x78695a4b, 0x3c2d1e0f, 0xb4a59687, 0xf0e1d2c3};
 	uint32_t iv[2] = {0x11223344, 0x55667788};
+	int32_t i;
 	
 	printf("\nmessage:");
 	hexdump((char *)message, sizeof(message));
 	
+	init_3des(_3DES_ENCRYPT);
+	set_key(_3des_key);
+
+	for (i = 0; i < 8; i++)
+		encrypt((uint32_t *)(message + i * 8));
+	
+	printf("\nencoded message (ECB mode):");
+	hexdump((char *)message, sizeof(message));
+	
+	init_3des(_3DES_DECRYPT);
+	set_key(_3des_key);
+	for (i = 0; i < 8; i++)
+		encrypt((uint32_t *)(message + i * 8));
+
+	printf("\ndecoded message (ECB mode):");
+	hexdump((char *)message, sizeof(message));
+
+
 	init_3des(_3DES_ENCRYPT);
 	set_key(_3des_key);
 	_3des_cbc_encrypt(message, message, sizeof(message), iv);
