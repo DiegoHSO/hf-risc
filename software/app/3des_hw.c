@@ -1,5 +1,5 @@
 #include <hf-risc.h>
-// #include "DES.h"
+#include "DES.h"
 
 #define _3DES_BASE			0xe7000000
 #define _3DES_KEY0			(*(volatile uint32_t *)(_3DES_BASE + 0x000))
@@ -35,7 +35,6 @@ void set_key(const uint32_t key[6]) {
 }
 
 void encrypt(uint32_t v[2]) {
-
 	_3DES_IN0 = v[0];
 	_3DES_IN1 = v[1];
 	_3DES_CONTROL |= _3DES_DATA_READY;
@@ -58,7 +57,7 @@ int main(void){
 	uint32_t _3des_key[6] = {0xf0e1d2c3, 0xb4a59687, 0x78695a4b, 0x3c2d1e0f, 0xb4a59687, 0xf0e1d2c3};
 	uint32_t msg[2] = {0x12345678, 0x90123456};
 
-	/* devemos manter?
+	// Software encryption
 	des_ctx dc; // Key schedule structure
    	unsigned char *cp;
    	unsigned char data[8]   = {0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56};
@@ -77,10 +76,8 @@ int main(void){
 	TripleDES_DEC( &dc, cp, 1, key, key1, key2);   // 3DES Decrypt
 	cycles = TIMER0 - cycles;
 	printf("decipher: %02x%02x%02x%02x%02x%02x%02x%02x, %d cycles\n", data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], cycles);
-	*/
 
-	printf("message: %8x%8x\n", msg[0], msg[1]);
-	
+	// Hardware encryption
 	init_3des(_3DES_ENCRYPT);
 	set_key(_3des_key);
 	

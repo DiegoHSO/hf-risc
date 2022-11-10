@@ -1,7 +1,0 @@
-boot
-message: 1234567890123456
-encipher: fe363df6c986d015, 1496 cycles
-decipher: 1234567890123456, 1494 cycles
-message: 1234567890123456
-encipher: bdb61bdf56a3ec79, 201 cycles
-decipher: 84bfea557b59dc2e, 61 cycles

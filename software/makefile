@@ -305,31 +305,11 @@ test_spi: crt
 
 3des_hw: crt
 	$(GCC_$(ARCH)) -o 3des_hw.o app/3des_hw.c
-	# $(GCC_$(ARCH)) -o DES.o app/DES.c
+	$(GCC_$(ARCH)) -o DES.o app/DES.c
 	@$(MAKE) --no-print-directory link
 
-3des2: crt
-	$(GCC_$(ARCH)) -o 3des2.o app/3des2.c
-	@$(MAKE) --no-print-directory link
-
-xtea: crt
-	$(GCC_$(ARCH)) -o xtea.o app/xtea.c
-	@$(MAKE) --no-print-directory link
-
-xtea2: crt
-	$(GCC_$(ARCH)) -o xtea2.o app/xtea2.c
-	@$(MAKE) --no-print-directory link
-
-xtea3: crt
-	$(GCC_$(ARCH)) -o xtea3.o app/xtea3.c
-	@$(MAKE) --no-print-directory link
-
-xtea_hw: crt
-	$(GCC_$(ARCH)) -o xtea_hw.o app/xtea_hw.c
-	@$(MAKE) --no-print-directory link
-
-xtea_hw_vec: crt
-	$(GCC_$(ARCH)) -o xtea_hw_vec.o app/xtea_hw_vec.c
+3des2_hw: crt
+	$(GCC_$(ARCH)) -o 3des2_hw.o app/3des2_hw.c
 	@$(MAKE) --no-print-directory link
 
 aes_tiny: crt

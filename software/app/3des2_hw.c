@@ -1,5 +1,4 @@
 #include <hf-risc.h>
-#include <math.h>
 
 #define _3DES_BASE			0xe7000000
 #define _3DES_KEY0			(*(volatile uint32_t *)(_3DES_BASE + 0x000))
@@ -21,6 +20,7 @@
 #define _3DES_RESET			(1 << 3)
 #define _3DES_READY			(1 << 4)
 
+// 3DES encryption algorithm
 
 void set_key(const uint32_t key[6]) {
 	_3DES_KEY0 = key[0];
@@ -52,12 +52,11 @@ void init_3des(int mode){
 	_3DES_CONTROL &= ~_3DES_RESET;
 }
 
+#define BLOCKLEN	8		// in bytes
 
 /* 3DES stream cipher, CBC mode
  * CBC mode based on https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation
  */
-
-#define BLOCKLEN	8		// in bytes
 
 void _3des_cbc_encrypt(uint8_t *out, uint8_t *in, uint32_t len, const uint32_t iv[2])
 {
@@ -123,7 +122,6 @@ void _3des_cbc_decrypt(uint8_t *out, uint8_t *in, uint32_t len, const uint32_t i
 /* 3DES stream cipher, CTR mode
  * CTR mode based on https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation
  */
-#define BLOCKLEN	8		// in bytes
 
 void _3des_ctr_crypt(uint8_t *out, uint8_t *in, uint32_t len, const uint32_t nonce[2])
 {
@@ -158,54 +156,72 @@ void _3des_ctr_crypt(uint8_t *out, uint8_t *in, uint32_t len, const uint32_t non
 	}
 }
 
+/* 3DES stream cipher, ECB mode
+ * ECB mode based on https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation
+ */
+
+void _3des_ecb_crypt(uint8_t *out, uint8_t *in, uint32_t len) {
+	uint32_t i, rem, block[2];
+	
+	rem = len % BLOCKLEN;
+
+	for (i = 0; i < len; i += BLOCKLEN) {
+		memcpy((char *)block, in, BLOCKLEN);
+		encrypt(block);
+		memcpy(out, (char *)block, BLOCKLEN);
+		in += BLOCKLEN;
+		out += BLOCKLEN;
+	}
+	if (rem) {
+		memcpy((char *)block, in, BLOCKLEN - rem);
+		memset((char *)block + rem, 0, BLOCKLEN - rem);
+		encrypt(block);
+		memcpy(out, (char *)block, BLOCKLEN - rem);
+	}
+}
+
 int main(void){
 	uint8_t message[] = "the quick brown fox jumps over the lazy dog";
+
 	uint32_t _3des_key[6] = {0xf0e1d2c3, 0xb4a59687, 0x78695a4b, 0x3c2d1e0f, 0xb4a59687, 0xf0e1d2c3};
 	uint32_t iv[2] = {0x11223344, 0x55667788};
-	int32_t i;
-	
-	printf("\nmessage:");
-	hexdump((char *)message, sizeof(message));
 	
 	init_3des(_3DES_ENCRYPT);
 	set_key(_3des_key);
-
-	for (i = 0; i < 8; i++)
-		encrypt((uint32_t *)(message + i * 8));
+	_3des_ecb_crypt(message, message, sizeof(message));
 	
 	printf("\nencoded message (ECB mode):");
 	hexdump((char *)message, sizeof(message));
 	
 	init_3des(_3DES_DECRYPT);
 	set_key(_3des_key);
-	for (i = 0; i < 8; i++)
-		encrypt((uint32_t *)(message + i * 8));
+	_3des_ecb_crypt(message, message, sizeof(message));
 
-	printf("\ndecoded message (ECB mode):");
+	printf("\n\ndecoded message (ECB mode):");
 	hexdump((char *)message, sizeof(message));
 
 
 	init_3des(_3DES_ENCRYPT);
 	set_key(_3des_key);
 	_3des_cbc_encrypt(message, message, sizeof(message), iv);
-	printf("\nencoded message (CBC mode):");
+	printf("\n\nencoded message (CBC mode):");
 	hexdump((char *)message, sizeof(message));
 
 	init_3des(_3DES_DECRYPT);
 	set_key(_3des_key);
 	_3des_cbc_decrypt(message, message, sizeof(message), iv);
-	printf("\ndecoded message (CBC mode):");
+	printf("\n\ndecoded message (CBC mode):");
 	hexdump((char *)message, sizeof(message));
 
 	
 	init_3des(_3DES_ENCRYPT);
 	set_key(_3des_key);
 	_3des_ctr_crypt(message, message, sizeof(message), iv);
-	printf("\nencoded message (CTR mode):");
+	printf("\n\nencoded message (CTR mode):");
 	hexdump((char *)message, sizeof(message));
 
 	_3des_ctr_crypt(message, message, sizeof(message), iv);
-	printf("\ndecoded message (CTR mode):");
+	printf("\n\ndecoded message (CTR mode):");
 	hexdump((char *)message, sizeof(message));
 
 	return 0;
